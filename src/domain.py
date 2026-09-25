@@ -34,6 +34,7 @@ class Role(str, Enum):
     metrology = "metrology"
     authorizer = "authorizer"
     analyst = "analyst"
+    reviewer = "reviewer"
 
 
 @dataclass
