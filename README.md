@@ -26,6 +26,16 @@ python3 app.py --db ./data.db --port 8309
 
 - `instrument`：仪器状态；`calibration`：校准记录；`method`：方法版本；`result`：检测结果。
 
+## 结果发布前核对
+
+`result` 的 `release` 动作会按结果引用的仪器和方法执行三项核对：
+
+1. 校准有效期：仪器须为 `active`；其校准记录（可用 `calibration_id` 显式指定，否则自动取该仪器最新已批准的校准）须已批准且 `due_at` 不早于当天。
+2. 方法覆盖范围：方法须处于 `validated`、覆盖该仪器（`instrument_ids`），且测量值落在 `parameters.range` 内。
+3. 本次测量不确定度：发布数据须声明正的 `uncertainty`，且不小于校准记录的校准不确定度。
+
+任一项不合规时，结果转入 `review`（待复核），`review_reasons` 列出全部原因。复核员（`authorizer`/`admin`）通过 `resolve_review` 动作重新选择有效校准与方法并填写 `disposition`（处置意见）后再次核对，通过才发布，否则留在待复核。每次尝试的绑定组合、原因和处置意见按时间追加到 `release_history`，并同步写入审计日志。`released` 为终态，已发布结果不能改绑。
+
 ## 主要接口
 
 - `GET /health`：健康检查。
